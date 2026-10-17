@@ -22,6 +22,14 @@ System reduced motion takes priority over the lab controls. No-API simulation ru
 
 Content links to MDN, Chrome developer documentation, and relevant CSS-Tricks reading. Individual examples link to the relevant references. Browser support is detected for the same-document API, not inferred for cross-document navigation.
 
+## Themes and logo
+
+The initial theme follows the system color preference. Use the theme button in the header to choose dark or light; that explicit choice is saved locally under `vt-lab-theme` and takes precedence over the system on subsequent visits. The theme is resolved before the stylesheet paints on all three pages. Without an override, changes to the system preference update the page automatically. If storage is unavailable, the system preference and the toggle still work on the current page.
+
+Theme tokens live in `dist/style.css`; the dark palette is scoped to `:root[data-theme="dark"]`. Demo artwork uses those tokens, and copied standalone examples include the currently selected palette.
+
+The custom **Offset Viewports** mark uses two offset geometric frames to represent the before and after views. Its vector paths are used in the header and footer, both navigation-demo pages, and the favicon. `dist/logo-mark.svg` is the standalone vector asset.
+
 ## Publishing
 
 The Sites source workflow versions this folder. `.openai/hosting.json` declares `dist` as the static root. No secrets or runtime data are required.

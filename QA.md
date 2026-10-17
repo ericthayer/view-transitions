@@ -11,3 +11,22 @@
 - Red action surfaces use white text (4.65:1); small red text on paper uses a darker red shade.
 
 Scope: tested in the available in-app browser, not a full cross-browser or screen-reader audit. Cross-document animation depends on browser support; normal links are preserved.
+
+## Dark theme and vector logo branch
+
+- Seven same-document demos reached their completed state in the dark palette.
+- Theme control supports Space, retains focus, and exposes the dark-theme state with aria-pressed.
+- Light preference survives reload; changing it on page B is reflected when returning to the lab.
+- All eight preview patterns fit at 390px without clipping or horizontal overflow; header controls remain accessible.
+- SVG logo and favicon parse as valid SVG; artwork uses theme variables.
+- Copied examples are checked in both palettes for complete theme tokens and valid JavaScript.
+- Main branch and the published Site remain the baseline while this branch is developed.
+
+## System color preference
+
+- Initial light and dark system preferences are applied before DOM readiness when no valid override is saved.
+- Saved light and dark choices take precedence over the system, including after reload.
+- Live system changes update the theme only while there is no explicit override.
+- Cross-tab preference changes are reflected; removing the override or clearing storage resumes system following.
+- Blocked storage preserves system detection and an in-memory user override for the current page.
+- All 11 behavior scenarios pass in an isolated runtime with simulated system preferences and storage events.
