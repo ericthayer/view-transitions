@@ -24,7 +24,7 @@ Content links to MDN, Chrome developer documentation, and relevant CSS-Tricks re
 
 ## Themes and logo
 
-This development branch defaults to a dark palette with a slight green tint. Use the **Theme / Dark** button in the header to switch between dark and light. The choice is saved locally under `vt-lab-theme` and restored before the stylesheet paints on all three pages. If storage is unavailable, the toggle still works on the current page.
+The initial theme follows the system color preference. Use the theme button in the header to choose dark or light; that explicit choice is saved locally under `vt-lab-theme` and takes precedence over the system on subsequent visits. The theme is resolved before the stylesheet paints on all three pages. Without an override, changes to the system preference update the page automatically. If storage is unavailable, the system preference and the toggle still work on the current page.
 
 Theme tokens live in `dist/style.css`; the dark palette is scoped to `:root[data-theme="dark"]`. Demo artwork uses those tokens, and copied standalone examples include the currently selected palette.
 

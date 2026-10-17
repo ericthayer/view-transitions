@@ -21,3 +21,12 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - SVG logo and favicon parse as valid SVG; artwork uses theme variables.
 - Copied examples are checked in both palettes for complete theme tokens and valid JavaScript.
 - Main branch and the published Site remain the baseline while this branch is developed.
+
+## System color preference
+
+- Initial light and dark system preferences are applied before DOM readiness when no valid override is saved.
+- Saved light and dark choices take precedence over the system, including after reload.
+- Live system changes update the theme only while there is no explicit override.
+- Cross-tab preference changes are reflected; removing the override or clearing storage resumes system following.
+- Blocked storage preserves system detection and an in-memory user override for the current page.
+- All 11 behavior scenarios pass in an isolated runtime with simulated system preferences and storage events.
