@@ -41,3 +41,31 @@
 @media(max-width:1100px){.header-tools{gap:0}}
 @media(max-width:700px){.topbar{gap:16px;flex-wrap:wrap;height:auto;min-height:76px;padding-top:18px;padding-bottom:14px;row-gap:14px}.topbar>.brand{order:0}.header-tools{order:1;margin-left:auto}.topbar>nav{order:2;width:100%;justify-content:space-between;gap:18px}.topbar nav a:last-child{display:block}.topbar nav span{display:inline}.theme-toggle{font-size:8px;min-height:34px;padding:7px 8px}.topbar .brand-mark{width:29px;height:29px}.topbar .brand{font-size:25px}}
 @media(forced-colors:active){.theme-toggle,.run-button{border:1px solid ButtonText}}
+
+/* Experiment 09: animate a single snapshot through a circular mask. */
+.reveal-scene{width:100%;max-width:420px}
+.reveal-card{display:flex;flex-direction:column;gap:16px;width:100%;min-height:205px;border:1px solid var(--rule);padding:20px;background:var(--paper);color:var(--ink);text-align:left;view-transition-name:reveal-surface}
+.reveal-title{font-family:'Barlow Condensed',Impact,sans-serif;font-size:49px;font-weight:700;line-height:.9;letter-spacing:-.02em}
+.reveal-caption{font:9px 'IBM Plex Mono',monospace;line-height:1.5}
+.reveal-card.is-signal{background:var(--red);color:var(--on-accent);border-color:var(--red)}
+.origin-controls{display:flex;align-items:center;gap:8px;margin-top:12px;font:8px 'IBM Plex Mono',monospace}
+.origin-controls>span{margin-right:auto;color:var(--muted)}
+.origin-controls button{border:1px solid var(--line);padding:7px 9px;font:inherit;background:var(--paper)}
+.origin-controls button[aria-pressed=true]{border-color:var(--ink);color:var(--ink)}
+::view-transition-old(reveal-surface){animation:none;mix-blend-mode:normal}
+::view-transition-new(reveal-surface){animation-name:reveal-in;mix-blend-mode:normal}
+@keyframes reveal-in{from{clip-path:circle(0% at var(--reveal-origin,50% 50%))}to{clip-path:circle(150% at var(--reveal-origin,50% 50%))}}
+
+/* Experiment 10: keep the last committed view while preparing the next one. */
+.async-scene{width:100%;max-width:440px}
+.async-card{padding:19px;border:1px solid var(--rule);background:var(--paper);min-height:190px;view-transition-name:async-content}
+.async-card .eyebrow{font-size:8px;color:var(--muted)}
+.async-card h4{font-family:'Barlow Condensed',Impact,sans-serif;font-size:35px;line-height:.95;letter-spacing:-.01em;margin:15px 0 10px;max-width:270px}
+.async-card p{font-size:11px;color:var(--muted);line-height:1.7;margin:0;max-width:330px}
+.async-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;font:9px 'IBM Plex Mono',monospace}
+.async-tools label{display:flex;gap:6px;align-items:center}
+.async-tools input{accent-color:var(--ink);margin:0}
+.async-tools button{border:1px solid var(--line);padding:6px 8px;font:inherit;background:var(--paper)}
+.async-tools button:disabled{cursor:default;opacity:.5}
+.async-feedback{font:8px/1.5 'IBM Plex Mono',monospace;color:var(--muted);margin:10px 0 0;min-height:24px}
+@media(max-width:600px){.reveal-card{min-height:195px}.async-card{min-height:182px}.async-card h4{font-size:33px}.async-tools{font-size:8px}}
