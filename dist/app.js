@@ -4,8 +4,8 @@ const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)]
 const root = document.documentElement;
 const media = matchMedia('(prefers-reduced-motion: reduce)');
 const stage = $('#stage');
-const ids = ['shared','reorder','layout','filter','tabs','pagination','gallery','navigation','reveal'];
-let current = 'shared', step = 0, busy = false, activeTransition = null, runId = 0;
+const ids = ['shared','reorder','layout','filter','tabs','pagination','gallery','navigation','reveal','async'];
+let current = 'shared', step = 0, busy = false, activeTransition = null, runId = 0, pendingRequest = null;
 const escapeHTML = text => text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const art = (index = 0) => {
   const content = [
@@ -23,6 +23,25 @@ const tabsHTML = () => `<div class="demo-tab-scene"><div role="tablist" aria-lab
 const pageHTML = () => `<div class="pagination-scene"><div class="page-content" id="page-content"><span class="page-number">01</span><h4>Establish the context.</h4><p>A clear starting point makes the next step feel natural.</p></div><div class="pagination-controls"><button data-page-dir="-1" aria-label="Previous step">←</button><span id="page-count">01 / 03</span><button data-page-dir="1" aria-label="Next step">→</button></div></div>`;
 const galleryHTML = () => `<div class="gallery-scene"><div class="gallery-main" id="gallery-main">${art()}</div><div class="gallery-controls" aria-label="Choose a geometric study">${[0,1,2].map(i=>`<button data-gallery="${i}" aria-pressed="${i===0}" aria-label="Show study ${i+1}">0${i+1}</button>`).join('')}<span class="gallery-caption" id="gallery-caption">CUBE / 001</span></div></div>`;
 const revealHTML = () => `<div class="reveal-scene"><button id="reveal-card" class="reveal-card" aria-pressed="false" aria-label="Signal found"><span class="eyebrow">FIELD SIGNAL / 009</span><span class="reveal-title">ALL<br>QUIET.</span><span class="reveal-caption">Click to reveal the next state ↗</span></button><div class="origin-controls" aria-label="Reveal origin"><span>ORIGIN</span><button data-origin="20% 50%" aria-pressed="false">LEFT</button><button data-origin="50% 50%" aria-pressed="true">CENTER</button><button data-origin="80% 50%" aria-pressed="false">RIGHT</button></div></div>`;
+const asyncStudies = [
+  {title:'START WITH CONTEXT.',copy:'Keep this study visible while the next result is being prepared.'},
+  {title:'PREPARE. THEN MOVE.',copy:'The data is ready before the browser captures the old and new views.'},
+  {title:'FAIL WITHOUT LOSING.',copy:'A failed preparation keeps the current content and offers a clear retry.'}
+];
+function prepareStudy(index, {signal, fail = false}) {
+  // Local fixture: replace this with fetch(url, {signal}) in a real app.
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) { reject(new DOMException('Canceled', 'AbortError')); return; }
+    const cancel = () => { clearTimeout(timer); reject(new DOMException('Canceled', 'AbortError')); };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', cancel);
+      if (fail) reject(new Error('Simulated preparation failure.'));
+      else resolve(asyncStudies[index]);
+    }, 450);
+    signal.addEventListener('abort', cancel, {once:true});
+  });
+}
+const asyncHTML = () => `<div class="async-scene"><div class="async-card" id="async-content" aria-busy="false"><span class="eyebrow">PREPARED STUDY / <span id="async-number">01</span></span><h4 id="async-title">${asyncStudies[0].title}</h4><p id="async-copy">${asyncStudies[0].copy}</p></div><div class="async-tools"><label><input id="async-fail" type="checkbox"> Simulate failure</label><button id="async-cancel" type="button" disabled>Cancel load</button></div><p id="async-message" class="async-feedback">LOCAL FIXTURE / 450 MS SIMULATED LATENCY</p></div>`;
 const links = {
   using:['MDN / Using view transitions','https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API/Using'],
   names:['MDN / view-transition-name','https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/view-transition-name'],
@@ -30,6 +49,7 @@ const links = {
   motion:['MDN / Reduced motion','https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion'],
   pages:['MDN / Cross-document opt-in','https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@view-transition'],
   clip:['CSS-Tricks / Clip-path animation','https://css-tricks.com/animating-with-clip-path/'],
+  abort:['MDN / AbortController','https://developer.mozilla.org/en-US/docs/Web/API/AbortController'],
   ready:['MDN / Transition lifecycle','https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition/ready'],
   chrome:['Chrome / Transition patterns','https://developer.chrome.com/docs/web-platform/view-transitions/']
 };
@@ -160,6 +180,52 @@ signal.addEventListener('click', () => {
   });
 });`,practices:[['Animate the new snapshot.','Keep the old snapshot visible while clip-path reveals the new one above it. A custom CSS keyframe replaces the default crossfade.'],['Set the origin before capture.','The origin variable is chosen before starting the transition. Use a generous final radius so the wipe reaches every corner.'],['Limit the effect to one region.','A named snapshot keeps the wipe inside the signal panel. Reserve full-screen reveals for changes that warrant that amount of motion.']],access:[['Keep a stable trigger.','The signal remains the same button in both states. Enter and Space activate it, and aria-pressed exposes whether a signal is found.'],['Support more than pointer coordinates.','The origin controls work with keyboard and touch. A centered origin is a useful default when there is no pointer position.'],['Skip spatial motion when requested.','The shared wrapper updates immediately for reduced motion or missing API support. The visual state and accessible pressed state still change together.']],resources:['using','clip','motion']}
 
+  ,async:{label:'Async content',title:'Prepare first. Animate second.',meta:'10 / ASYNC CONTENT',description:'Keep the current view while data loads. Animate only the committed result, with cancellation and a recoverable failure.',hint:'450 MS LOCAL SIMULATION / NO NETWORK REQUEST',html:asyncHTML,css:'.async-card { view-transition-name: async-content; }',js:`const asyncStudies = ${JSON.stringify(asyncStudies, null, 2)};
+${prepareStudy.toString()}
+const panel = document.querySelector('#async-content');
+const trigger = document.querySelector('#demo-action');
+const cancel = document.querySelector('#async-cancel');
+const feedback = document.querySelector('#async-message');
+const live = document.querySelector('#demo-status');
+let request, index = 0;
+function report(message) { feedback.textContent = message; live.textContent = message; }
+trigger.addEventListener('click', async () => {
+  if (request) return;
+  const controller = new AbortController();
+  request = controller;
+  panel.setAttribute('aria-busy', 'true');
+  trigger.setAttribute('aria-disabled', 'true');
+  cancel.disabled = false;
+  report('Loading the next study. Current content stays visible.');
+  try {
+    const next = (index + 1) % asyncStudies.length;
+    const study = await prepareStudy(next, {
+      signal: controller.signal,
+      fail: document.querySelector('#async-fail').checked
+    });
+    // Prepare outside the transition; commit only a short DOM update.
+    cancel.disabled = true;
+    panel.setAttribute('aria-busy', 'false');
+    await transition(() => {
+      index = next;
+      document.querySelector('#async-number').textContent = '0' + (index + 1);
+      document.querySelector('#async-title').textContent = study.title;
+      document.querySelector('#async-copy').textContent = study.copy;
+    });
+    report('Study ' + (index + 1) + ' loaded.');
+  } catch (error) {
+    report(error.name === 'AbortError' ? 'Load canceled. Current study kept.'
+      : 'Preparation failed. Current study kept; clear Simulate failure and retry.');
+  } finally {
+    request = null;
+    panel.setAttribute('aria-busy', 'false');
+    trigger.removeAttribute('aria-disabled');
+    cancel.disabled = true;
+  }
+});
+cancel.addEventListener('click', () => { request?.abort(); trigger.focus(); });
+addEventListener('pagehide', () => request?.abort());`,practices:[['Prepare outside the transition.','Fetch data and decode assets before startViewTransition. The callback should only commit the ready result; do not hold a frozen snapshot while waiting on a network request.'],['Make pending work cancelable.','This example uses a local 450 ms fixture with AbortController. Resetting or leaving the experiment aborts preparation so an old result cannot overwrite a newer view.'],['Keep the last good result.','A simulated failure preserves the current content. Clear the failure option and run again to retry. In a real app, replace the fixture with fetch(url, {signal}).']],access:[['Expose busy state without hiding content.','The changing region uses aria-busy during preparation. Keep loading and error announcements outside that region so they are not deferred with its updates.'],['Keep controls and focus stable.','Run retains focus while loading. Cancel is available during preparation and returns focus to Run. The new content never steals focus.'],['Treat loading and motion separately.','Reduced motion skips the animation, not the data preparation. Loading, cancellation, and failure feedback remain available in the fallback path.']],resources:['using','abort','motion']}
+
 };
 const wrapperCode = () => `// Progressive enhancement: the update always runs.\nfunction announce() {\n  const status = document.querySelector('#demo-status');\n  if (status) status.textContent = 'View updated.';\n}\nconst motion = matchMedia('(prefers-reduced-motion: reduce)');\nlet active;\nasync function transition(update) {\n  active?.skipTransition();\n  const reduceMotion = ${$('#reduce-motion').checked};\n  const simulateNoAPI = ${$('#fallback').checked};\n  if (!document.startViewTransition || motion.matches\n      || reduceMotion || simulateNoAPI) {\n    update();\n    announce();\n    return;\n  }\n  active = document.startViewTransition(() => {\n    update();\n    announce();\n  });\n  active.ready.catch(() => {}); // Can be skipped.\n  try { await active.finished; }\n  catch (error) { console.error(error); }\n}\nmotion.addEventListener('change', event => {\n  if (event.matches) active?.skipTransition();\n});`;
 function timingCSS(){return `::view-transition-group(*),\n::view-transition-old(*),\n::view-transition-new(*) {\n  animation-duration: ${$('#duration').value}ms;\n  animation-timing-function: ${$('#easing').value};\n}\n@media (prefers-reduced-motion: reduce) {\n  ::view-transition-group(*),\n  ::view-transition-old(*),\n  ::view-transition-new(*) { animation: none !important; }\n}`;}
@@ -186,9 +252,57 @@ async function perform(update,message){
   }catch(error){if(thisRun===runId)status('The animation was skipped. The state update still applies.');console.error(error);}
   finally{if(thisRun===runId){activeTransition=null;busy=false;$('#run').removeAttribute('aria-disabled');}}
 }
-function stateLabel(){if(current==='navigation')return 'TWO DOCUMENTS';if(['tabs','pagination','gallery'].includes(current))return `STATE ${'ABC'[step%3]}`;return step%2?'STATE B':'STATE A';}
+async function loadAsyncStudy() {
+  if (busy || pendingRequest) return;
+  const controller = new AbortController();
+  pendingRequest = controller;
+  const panel = $('#async-content'), feedback = $('#async-message');
+  const cancel = $('#async-cancel'), failure = $('#async-fail');
+  panel.setAttribute('aria-busy','true');
+  cancel.disabled = false;
+  const shouldFail = failure.checked;
+  failure.disabled = true;
+  $('#run').setAttribute('aria-disabled','true');
+  $('#run-label').textContent = 'PREPARING DATA…';
+  feedback.textContent = 'PREPARING NEXT STUDY / CURRENT VIEW KEPT';
+  phase(null);
+  status('Loading the next study. Current content stays visible.');
+  try {
+    const next = (step + 1) % asyncStudies.length;
+    const study = await prepareStudy(next, {signal:controller.signal, fail:shouldFail});
+    if (pendingRequest !== controller || current !== 'async') return;
+    pendingRequest = null;
+    cancel.disabled = true;
+    panel.setAttribute('aria-busy','false');
+    $('#run-label').textContent = 'RUN TRANSITION';
+    await perform(() => {
+      step = next;
+      $('#async-number').textContent = '0' + (step + 1);
+      $('#async-title').textContent = study.title;
+      $('#async-copy').textContent = study.copy;
+    }, 'Study ' + (next + 1) + ' loaded.');
+    if (panel.isConnected) feedback.textContent = 'READY / STUDY 0' + (next + 1);
+  } catch (error) {
+    if (pendingRequest !== controller || !panel.isConnected) return;
+    feedback.textContent = error.name === 'AbortError'
+      ? 'CANCELED / CURRENT STUDY KEPT' : 'FAILED / CLEAR SIMULATE FAILURE AND RETRY';
+    status(error.name === 'AbortError' ? 'Load canceled. Current study kept.'
+      : 'Preparation failed. Current study kept; clear Simulate failure and retry.');
+  } finally {
+    if (pendingRequest === controller) pendingRequest = null;
+    if (panel.isConnected) {
+      panel.setAttribute('aria-busy','false');
+      cancel.disabled = true;
+      failure.disabled = false;
+      $('#run-label').textContent = 'RUN TRANSITION';
+      if (!busy) $('#run').removeAttribute('aria-disabled');
+    }
+  }
+}
+function stateLabel(){if(current==='navigation')return 'TWO DOCUMENTS';if(['tabs','pagination','gallery','async'].includes(current))return `STATE ${'ABC'[step%3]}`;return step%2?'STATE B':'STATE A';}
 function runDemo(target){
-  if(busy)return;
+  if(busy||pendingRequest)return;
+  if(current==='async'){loadAsyncStudy();return;}
   if(current==='navigation'){location.href=$('#open-pages').href;return;}
   let next=typeof target==='number'?target:step+1;
   if(['tabs','gallery'].includes(current)&&next%3===step%3)return;
@@ -203,6 +317,7 @@ function runDemo(target){
 }
 function selectExperiment(id,{announce=true}={}){
   if(!experiments[id])id='shared';
+  pendingRequest?.abort();pendingRequest=null;
   runId++;activeTransition?.skipTransition();activeTransition=null;busy=false;current=id;step=0;
   $('#run').removeAttribute('aria-disabled');$('#run').removeAttribute('aria-pressed');if(id==='layout')$('#run').setAttribute('aria-pressed','false');
   const d=experiments[id];$$('[data-experiment]').forEach(b=>b.setAttribute('aria-current',b.dataset.experiment===id));
@@ -220,13 +335,14 @@ $('#experiment-list').innerHTML=ids.map((id,i)=>`<button data-experiment="${id}"
 $('#experiment-list').addEventListener('click',event=>{const button=event.target.closest('[data-experiment]');if(button)selectExperiment(button.dataset.experiment);});
 $('#run').addEventListener('click',()=>runDemo());
 $('#reset').addEventListener('click',()=>{selectExperiment(current,{announce:false});status('Experiment reset to its starting state.');});
-stage.addEventListener('click',event=>{if(event.target.closest('.specimen')||event.target.closest('#reveal-card'))runDemo();const origin=event.target.closest('[data-origin]');if(origin){root.style.setProperty('--reveal-origin',origin.dataset.origin);$$('[data-origin]',stage).forEach(button=>button.setAttribute('aria-pressed',button===origin));}const filter=event.target.closest('[data-filter]');if(filter)runDemo(filter.dataset.filter==='solid'?1:0);const tab=event.target.closest('[data-demo-tab]');if(tab)runDemo(Number(tab.dataset.demoTab));const page=event.target.closest('[data-page-dir]');if(page)runDemo(Number(page.dataset.pageDir));const gallery=event.target.closest('[data-gallery]');if(gallery)runDemo(Number(gallery.dataset.gallery));});
+stage.addEventListener('click',event=>{if(event.target.closest('#async-cancel')){pendingRequest?.abort();$('#run').focus({preventScroll:true});return;}if(event.target.closest('.specimen')||event.target.closest('#reveal-card'))runDemo();const origin=event.target.closest('[data-origin]');if(origin){root.style.setProperty('--reveal-origin',origin.dataset.origin);$$('[data-origin]',stage).forEach(button=>button.setAttribute('aria-pressed',button===origin));}const filter=event.target.closest('[data-filter]');if(filter)runDemo(filter.dataset.filter==='solid'?1:0);const tab=event.target.closest('[data-demo-tab]');if(tab)runDemo(Number(tab.dataset.demoTab));const page=event.target.closest('[data-page-dir]');if(page)runDemo(Number(page.dataset.pageDir));const gallery=event.target.closest('[data-gallery]');if(gallery)runDemo(Number(gallery.dataset.gallery));});
 stage.addEventListener('keydown',event=>{const tab=event.target.closest('[data-demo-tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();if(busy)return;const index=Number(tab.dataset.demoTab);const next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:-1)+3)%3;$('#spec-tab-'+next).focus();runDemo(next);});
 $$('.inspector-tabs [role=tab]').forEach((tab,index,tabs)=>{const activate=()=>{tabs.forEach(t=>{const selected=t===tab;t.setAttribute('aria-selected',selected);t.tabIndex=selected?0:-1;$('#'+t.getAttribute('aria-controls')).hidden=!selected;});};tab.addEventListener('click',activate);tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;tabs[next].click();tabs[next].focus();});});
 $('#duration').addEventListener('input',applyTiming);$('#easing').addEventListener('change',applyTiming);$('#reduce-motion').addEventListener('change',updateMotion);$('#fallback').addEventListener('change',updateMotion);media.addEventListener('change',updateMotion);
 $('#support-label').innerHTML='<span class="status-dot"></span>'+(document.startViewTransition?'SAME-DOCUMENT API SUPPORTED':'FALLBACK MODE / NO SAME-DOCUMENT API');
 const standaloneCSS = `body{margin:0;padding:32px;background:var(--paper);color:var(--ink);font-family:system-ui}button{cursor:pointer;color:inherit}button:focus-visible{outline:3px solid var(--red);outline-offset:4px}main{max-width:600px;margin:auto}svg{max-width:100%}.eyebrow,.tile-label{font-size:11px}.specimen{width:230px;border:1px solid;background:var(--paper);text-align:left;padding:0;display:grid}.specimen-art{display:grid;place-items:center;height:160px;border-bottom:1px solid}.specimen-art svg{width:160px;height:140px}.specimen-copy{padding:20px}.specimen-title{font-size:28px;font-weight:800}.specimen-detail{display:none;line-height:1.6}.specimen-footer{display:flex;justify-content:space-between;margin-top:12px;font-size:11px}.specimen.is-expanded{width:100%;grid-template-columns:1fr 1fr}.specimen.is-expanded .specimen-art{height:100%;border-right:1px solid;border-bottom:0}.specimen.is-expanded .specimen-detail{display:block}.demo-list{list-style:none;padding:0;display:grid;gap:10px}.demo-list li{padding:20px;border:1px solid;display:flex;gap:15px}.demo-list li span:last-child{margin-left:auto}.demo-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.demo-tile{border:1px solid;padding:20px;display:flex;flex-direction:column;gap:10px}.tile-icon{font-size:35px;color:var(--red)}.demo-tiles.is-list{grid-template-columns:1fr}.demo-tiles.is-list .demo-tile{flex-direction:row;align-items:center}.filter-controls,.gallery-controls{display:flex;gap:12px;margin:20px 0}.filter-controls button,.gallery-controls button{padding:10px;border:1px solid;background:var(--paper)}[aria-pressed=true]{outline:2px solid var(--red)}.demo-tab-list{display:flex;border-bottom:1px solid}.demo-tab-list button{flex:1;padding:14px;border:0;background:var(--paper)}[aria-selected=true]{border-bottom:3px solid var(--red)!important}.demo-tab-content{padding:30px;border:1px solid;min-height:150px}h4{font-size:28px;margin:8px 0}.pagination-scene{padding:25px;border:1px solid}.page-number{font-size:80px;color:var(--red)}.pagination-controls{display:flex;justify-content:space-between}.pagination-controls button{padding:10px}.gallery-main{height:250px;border:1px solid;display:grid;place-items:center}.gallery-main svg{height:220px}.gallery-caption{align-self:center}#demo-action{margin:24px 0;padding:14px 20px;background:var(--red);color:var(--on-accent);border:0}[hidden]{display:none!important}@media(max-width:500px){body{padding:18px}.demo-tile{padding:12px}.specimen.is-expanded{grid-template-columns:1fr}.specimen.is-expanded .specimen-art{height:150px;border-right:0;border-bottom:1px solid}}`;
 const extraExampleCSS = '.reveal-scene{width:100%;max-width:420px}.reveal-card{display:flex;flex-direction:column;gap:18px;width:100%;min-height:220px;border:1px solid;background:var(--paper);color:var(--ink);padding:22px;text-align:left}.reveal-card.is-signal{background:var(--red);color:var(--on-accent)}.reveal-title{font-size:44px;font-weight:800;line-height:.95}.reveal-caption{font-size:11px}.origin-controls{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:10px}.origin-controls button{border:1px solid;background:var(--paper);color:var(--ink);padding:8px;font-size:10px}';
+const asyncExampleCSS = '.async-scene{width:100%;max-width:440px}.async-card{padding:20px;border:1px solid;min-height:190px}.async-card h4{font-size:30px;line-height:1.05}.async-card p{font-size:12px;line-height:1.6}.async-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;font-size:11px}.async-tools label{display:flex;gap:6px;align-items:center}.async-tools button{border:1px solid;background:var(--paper);color:var(--ink);padding:7px;font-size:11px}.async-feedback{font-size:10px;line-height:1.5;min-height:30px}';
 function exportThemeCSS(){
   const palette = getComputedStyle(root);
   const names = ['paper','ink','red','on-accent','art-ink','art-paper','art-accent'];
@@ -234,13 +350,14 @@ function exportThemeCSS(){
     + names.map(name => '--' + name + ':' + palette.getPropertyValue('--' + name).trim() + ';').join('') + '}';
 }
 function exportExample(){const d=experiments[current];if(current==='navigation')return d.css+'\n\n'+timingCSS()+'\n\n/* Use ordinary same-origin links between page-a.html and page-b.html. No JavaScript is required. */';
-  const action=['reorder','layout'].includes(current)?'<button id="demo-action">'+(current==='layout'?'Toggle list layout':'Reverse order')+'</button>':'';
+  const action=['reorder','layout','async'].includes(current)?'<button id="demo-action">'+(current==='layout'?'Toggle list layout':current==='async'?'Load next study':'Reverse order')+'</button>':'';
   const templates=current==='gallery'?[0,1,2].map(i=>`<template>${art(i)}</template>`).join(''):'';
-  return `<!doctype html>\n<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<title>${d.label} — VT/LAB example</title>\n<style>\n${exportThemeCSS()}\n${standaloneCSS}\n${extraExampleCSS}\n${d.css}\n${timingCSS()}\n</style>\n<main><h1>${d.label}</h1>\n${d.html()}\n${action}\n<p id="demo-status" role="status" aria-live="polite"></p></main>\n${templates}\n<script>\n${wrapperCode()}\n${d.js}\n</script></html>`;
+  return `<!doctype html>\n<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<title>${d.label} — VT/LAB example</title>\n<style>\n${exportThemeCSS()}\n${standaloneCSS}\n${extraExampleCSS}\n${asyncExampleCSS}\n${d.css}\n${timingCSS()}\n</style>\n<main><h1>${d.label}</h1>\n${d.html()}\n${action}\n<p id="demo-status" role="status" aria-live="polite"></p></main>\n${templates}\n<script>\n${wrapperCode()}\n${d.js}\n</script></html>`;
 }
 $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(exportExample());$('#copy').textContent='COPIED ✓';status(current==='navigation'?'Cross-document CSS copied. Add it to both pages.':'Standalone example copied. Save as an HTML file and open in a browser.');}catch{const code=$('#code');const selection=getSelection();const range=document.createRange();range.selectNodeContents(code);selection.removeAllRanges();selection.addRange(range);status('Clipboard unavailable. The displayed code is selected; use your browser’s Copy command.');} });
 const initial = new URLSearchParams(location.search);
 if(initial.has('duration'))$('#duration').value=String(Math.max(100,Math.min(2000,Number(initial.get('duration'))||600)));
 if([...$('#easing').options].some(option=>option.value===initial.get('easing')))$('#easing').value=initial.get('easing');
 if(initial.get('motion')==='reduce')$('#reduce-motion').checked=true;
+addEventListener('pagehide',()=>pendingRequest?.abort());
 selectExperiment(initial.get('demo')||'shared',{announce:false});applyTiming();updateMotion();

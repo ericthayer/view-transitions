@@ -55,3 +55,17 @@
 ::view-transition-old(reveal-surface){animation:none;mix-blend-mode:normal}
 ::view-transition-new(reveal-surface){animation-name:reveal-in;mix-blend-mode:normal}
 @keyframes reveal-in{from{clip-path:circle(0% at var(--reveal-origin,50% 50%))}to{clip-path:circle(150% at var(--reveal-origin,50% 50%))}}
+
+/* Experiment 10: keep the last committed view while preparing the next one. */
+.async-scene{width:100%;max-width:440px}
+.async-card{padding:19px;border:1px solid var(--rule);background:var(--paper);min-height:190px;view-transition-name:async-content}
+.async-card .eyebrow{font-size:8px;color:var(--muted)}
+.async-card h4{font-family:'Barlow Condensed',Impact,sans-serif;font-size:35px;line-height:.95;letter-spacing:-.01em;margin:15px 0 10px;max-width:270px}
+.async-card p{font-size:11px;color:var(--muted);line-height:1.7;margin:0;max-width:330px}
+.async-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;font:9px 'IBM Plex Mono',monospace}
+.async-tools label{display:flex;gap:6px;align-items:center}
+.async-tools input{accent-color:var(--ink);margin:0}
+.async-tools button{border:1px solid var(--line);padding:6px 8px;font:inherit;background:var(--paper)}
+.async-tools button:disabled{cursor:default;opacity:.5}
+.async-feedback{font:8px/1.5 'IBM Plex Mono',monospace;color:var(--muted);margin:10px 0 0;min-height:24px}
+@media(max-width:600px){.reveal-card{min-height:195px}.async-card{min-height:182px}.async-card h4{font-size:33px}.async-tools{font-size:8px}}

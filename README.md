@@ -10,9 +10,11 @@ Open http://localhost:4173. The two-document experiment uses page-a.html and pag
 
 ## Experiments
 
-Shared elements, list reorder, grid/list layout, filtering, accessible tabs, directional paging, gallery swapping, and cross-document navigation.
+Ten experiments cover shared elements, list reorder, grid/list layout, filtering, accessible tabs, directional paging, gallery swapping, cross-document navigation, circular snapshot reveals, and async content preparation.
 
-Code copies for experiments 1–7 include a standalone HTML example, styles, and a reduced-motion-aware feature-detection wrapper. Cross-document copying provides CSS to include in both pages.
+Code copies for experiments 1–7 and 9–10 include a standalone HTML example, styles, and a reduced-motion-aware feature-detection wrapper. Cross-document copying provides CSS to include in both pages.
+
+The circular reveal uses a named snapshot and custom clip-path keyframes, with selectable origins. The async example uses a clearly labeled local fixture with 450 ms simulated latency; no network service is required. It preserves the current view during preparation, supports cancellation and failure/retry, and starts the transition only after data is ready.
 
 ## Accessibility and fallback
 

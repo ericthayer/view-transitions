@@ -30,3 +30,16 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - Cross-tab preference changes are reflected; removing the override or clearing storage resumes system following.
 - Blocked storage preserves system detection and an in-memory user override for the current page.
 - All 11 behavior scenarios pass in an isolated runtime with simulated system preferences and storage events.
+
+## Ten-experiment index
+
+- Index and overview display 10; entries use two-digit numbering through 10.
+- Circular reveal: signal state, left/center/right origins, Space activation, and reduced-motion fallback verified.
+- Async content: old content stays visible while aria-busy is true; completion animates the prepared result.
+- Simulated failure keeps the last result, clears busy state, and permits retry.
+- Cancel returns focus to Run; leaving/resetting the experiment aborts preparation without a stale update.
+- Reduced-motion and simulated-no-API paths still load data and update without animation.
+- Both new scenes fit a 390px viewport without clipping or horizontal overflow.
+- All nine same-document experiments complete successfully in the browser with no console warnings or errors.
+- Standalone exports for all nine local examples parse and include complete theme tokens in both palettes.
+- Async data is a local fixture with an explicit 450 ms simulated delay; no network service is implied.
