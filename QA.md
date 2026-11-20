@@ -52,3 +52,4 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - VT/LAB wordmarks use computed font weight 800; logo-mark SVGs and the registered trademark symbol are removed from all app headers and the footer.
 - Updated icons and wordmark checked in both themes and at desktop/mobile widths; the 390px layout has no horizontal overflow.
 - Shared-element demo still completes successfully; no console warnings or errors observed during the checked flow.
+- Header metadata precedes the theme toggle in DOM order on all three pages; at 1280px the theme control is the rightmost element and still changes the theme.
