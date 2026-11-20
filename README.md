@@ -1,6 +1,8 @@
 # VT/LAB
 
-An interactive field guide to the native Web View Transitions API. Built with HTML, CSS, and JavaScript, with no application dependencies or build step.
+![VT/LAB — explore the space between interface states](assets/readme-hero.jpg)
+
+**An interactive field guide to browser View Transitions.** Explore ten working patterns, adjust motion, and see how the browser connects interface states. Each experiment pairs runnable code with accessibility guidance, implementation practices, and links to trusted references. Built with HTML, CSS, and JavaScript; no framework or build step required.
 
 ## Preview
 
