@@ -57,7 +57,9 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 ## Preview animation containment
 
 - Confirmed the live stage already uses overflow:hidden; named View Transition snapshots require their own overlay clip.
-- During a 2000ms overshooting shared-element transition, the computed ::view-transition clip matches the preview’s inner bounds and the animation stays inside the panel.
+- During a 2000ms overshooting shared-element transition, the computed ::view-transition clip matches the preview’s outer border bounds and the animation stays inside the panel.
 - All nine same-document demos animate with the preview clip active and complete without console warnings or errors.
 - Scrolling and resizing skip the current animation and release the clip while preserving the committed state.
 - The mobile clip matches the resized preview; reduced-motion updates do not leave clipping state behind.
+
+- Border regression: the clip includes the entire demo-surface border box (not its inner content box). Grid/list transitions in both directions retain the frame during 2000ms overshoot animations.

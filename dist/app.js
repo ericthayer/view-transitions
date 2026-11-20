@@ -240,10 +240,11 @@ function updatePageLink(){const link=$('#open-pages');if(link){const query=new U
 function updateMotion(){if(reduced()||$('#fallback').checked)activeTransition?.skipTransition();$('#motion-note').textContent=media.matches?'SYSTEM: REDUCED MOTION — transitions are skipped.':$('#reduce-motion').checked?'REDUCED MOTION — state changes without animation.':$('#fallback').checked?'FALLBACK — updates run without the View Transitions API.':'System motion preference is always respected.';updateCode();updatePageLink();}
 function containPreviewTransition(owner) {
   const bounds = stage.getBoundingClientRect();
-  const left = bounds.left + stage.clientLeft;
-  const top = bounds.top + stage.clientTop;
-  const right = bounds.right - stage.clientLeft;
-  const bottom = bounds.bottom - stage.clientTop;
+  const left = bounds.left;
+  const top = bounds.top;
+  const right = bounds.right;
+  const bottom = bounds.bottom;
+  // Include the stage border: it is part of the demo-surface snapshot.
   // Named snapshots live in the document overlay, outside #stage's overflow clip.
   root.style.setProperty('--preview-clip', `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`);
   root.dataset.previewTransition = String(owner);
