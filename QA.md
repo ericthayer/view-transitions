@@ -22,14 +22,13 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - Copied examples are checked in both palettes for complete theme tokens and valid JavaScript.
 - Main branch and the published Site remain the baseline while this branch is developed.
 
-## System color preference
+## Theme default and override
 
-- Initial light and dark system preferences are applied before DOM readiness when no valid override is saved.
-- Saved light and dark choices take precedence over the system, including after reload.
-- Live system changes update the theme only while there is no explicit override.
-- Cross-tab preference changes are reflected; removing the override or clearing storage resumes system following.
-- Blocked storage preserves system detection and an in-memory user override for the current page.
-- All 11 behavior scenarios pass in an isolated runtime with simulated system preferences and storage events.
+- Dark is applied before DOM readiness when no valid override is saved.
+- Saved light and dark choices take precedence over the default, including after reload.
+- Cross-tab preference changes are reflected; removing the override restores dark.
+- Blocked storage keeps dark as the default and the user toggle works in memory.
+- All 11 behavior scenarios pass in an isolated runtime with simulated storage states and events.
 
 ## Ten-experiment index
 
@@ -43,3 +42,23 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - All nine same-document experiments complete successfully in the browser with no console warnings or errors.
 - Standalone exports for all nine local examples parse and include complete theme tokens in both palettes.
 - Async data is a local fixture with an explicit 450 ms simulated delay; no network service is implied.
+
+## Arrow icons and text-only wordmark
+
+- Hero progression arrows use three separate SVG paths with independent arrowheads and clear spacing.
+- Capture, update, and continuity illustrations use a shared SVG icon set; the compressed brace/arrow text glyph is removed.
+- All shared icon references resolve, and the sprite and typographic favicon parse as valid SVG.
+- VT/LAB wordmarks use computed font weight 800; logo-mark SVGs and the registered trademark symbol are removed from all app headers and the footer.
+- Updated icons and wordmark checked in both themes and at desktop/mobile widths; the 390px layout has no horizontal overflow.
+- Shared-element demo still completes successfully; no console warnings or errors observed during the checked flow.
+- Header metadata precedes the theme toggle in DOM order on all three pages; at 1280px the theme control is the rightmost element and still changes the theme.
+
+## Preview animation containment
+
+- Confirmed the live stage already uses overflow:hidden; named View Transition snapshots require their own overlay clip.
+- During a 2000ms overshooting shared-element transition, the computed ::view-transition clip matches the preview’s outer border bounds and the animation stays inside the panel.
+- All nine same-document demos animate with the preview clip active and complete without console warnings or errors.
+- Scrolling and resizing skip the current animation and release the clip while preserving the committed state.
+- The mobile clip matches the resized preview; reduced-motion updates do not leave clipping state behind.
+
+- Border regression: the clip includes the entire demo-surface border box (not its inner content box). Grid/list transitions in both directions retain the frame during 2000ms overshoot animations.

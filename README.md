@@ -1,6 +1,8 @@
 # VT/LAB
 
-An interactive field guide to the native Web View Transitions API. Built with HTML, CSS, and JavaScript, with no application dependencies or build step.
+![VT/LAB — explore the space between interface states](assets/readme-hero.jpg)
+
+**An interactive field guide to browser View Transitions.** Explore ten working patterns, adjust motion, and see how the browser connects interface states. Each experiment pairs runnable code with accessibility guidance, implementation practices, and links to trusted references. Built with HTML, CSS, and JavaScript; no framework or build step required.
 
 ## Preview
 
@@ -20,17 +22,25 @@ The circular reveal uses a named snapshot and custom clip-path keyframes, with s
 
 System reduced motion takes priority over the lab controls. No-API simulation runs the same DOM update immediately. Keyboard-operable controls, roving tab focus, state attributes, and live status messages accompany the demos. Cross-document navigation uses ordinary links and CSS opt-in on both pages.
 
+The playground clips both the live preview DOM and the native View Transition overlay to the preview bounds. The overlay clip is temporary and is released when the transition finishes. Scrolling or resizing skips the animation so a snapshot cannot cover adjacent controls after its viewport coordinates change. The standalone exports and full-page navigation demo keep their normal document behavior.
+
 ## Source
 
 Content links to MDN, Chrome developer documentation, and relevant CSS-Tricks reading. Individual examples link to the relevant references. Browser support is detected for the same-document API, not inferred for cross-document navigation.
 
 ## Themes and logo
 
-The initial theme follows the system color preference. Use the theme button in the header to choose dark or light; that explicit choice is saved locally under `vt-lab-theme` and takes precedence over the system on subsequent visits. The theme is resolved before the stylesheet paints on all three pages. Without an override, changes to the system preference update the page automatically. If storage is unavailable, the system preference and the toggle still work on the current page.
+Dark is the default theme and is applied before the stylesheet paints on all three pages. Use the theme button in the header to choose light or dark; that explicit choice is saved locally under `vt-lab-theme` and takes precedence on subsequent visits. If storage is unavailable, dark remains the default and the toggle still works for the current page.
 
 Theme tokens live in `dist/style.css`; the dark palette is scoped to `:root[data-theme="dark"]`. Demo artwork uses those tokens, and copied standalone examples include the currently selected palette.
 
-The custom **Offset Viewports** mark uses two offset geometric frames to represent the before and after views. Its vector paths are used in the header and footer, both navigation-demo pages, and the favicon. `dist/logo-mark.svg` is the standalone vector asset.
+The VT/LAB identity is a text-only wordmark with no accompanying geometric mark.
+
+## Icon and wordmark refinement
+
+The app uses a text-only VT/LAB wordmark at weight 800 across the header, footer, and navigation-demo pages. The favicon uses a typographic VT abbreviation.
+
+`dist/assets/interface-icons.svg` defines the revised progression, capture, update, and continuity graphics. The hero uses three distinct arrowheads, and the mechanics section uses separate snapshot frames and a bracketed update arrow. Both use explicit SVG geometry rather than tightly spaced text glyphs.
 
 ## Publishing
 

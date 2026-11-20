@@ -123,7 +123,7 @@ tabs.forEach((tab, index) => {
     selectTab(next);
   });
 });`,practices:[['Name only the changing panel.','The tabs remain visually anchored. Isolating the panel avoids a whole-page crossfade for a small content change.'],['Keep the panel height steady.','A stable minimum height prevents content below the tabbed region from jumping during a short transition.'],['Choose activation deliberately.','These local panels activate with arrow keys because they are immediately available. For slow network content, consider manual activation.']],access:[['Implement the complete tab pattern.','Use tablist, tab, tabpanel, aria-selected, aria-controls, and aria-labelledby. Only the active tab belongs in the normal Tab sequence.'],['Support directional keys.','Left and Right move between tabs; Home and End reach the first and last tab. Tab then reaches the active panel.'],['Keep focus on the selected tab.','The panel updates without stealing focus. A focusable panel lets keyboard users enter the content deliberately.']],resources:['using','ready','motion']},
-  pagination:{label:'Directional paging',title:'Give motion a direction.',meta:'06 / PAGINATION',description:'Move forward and backward through a sequence. Directional snapshot animations reinforce where you are going.',hint:'USE THE ARROWS TO CHANGE DIRECTION',html:pageHTML,css:'.page-content { view-transition-name: page-content; }\n::view-transition-old(page-content) { animation-name: slide-out; }\n::view-transition-new(page-content) { animation-name: slide-in; }\n@keyframes slide-out { to { opacity: 0; transform: translateX(calc(-40px * var(--direction, 1))); } }\n@keyframes slide-in { from { opacity: 0; transform: translateX(calc(40px * var(--direction, 1))); } }',js:`let page = 0;
+  pagination:{label:'Directional paging',title:'Give motion a direction.',meta:'06 / PAGINATION',description:'Move forward and backward through a sequence. Directional snapshot animations reinforce where you are going.',hint:'USE THE ARROWS TO CHANGE DIRECTION',html:pageHTML,css:'.pagination-scene { overflow: hidden; }\n::view-transition-group(page-content) { overflow: hidden; }\n.page-content { view-transition-name: page-content; }\n::view-transition-old(page-content) { animation-name: slide-out; }\n::view-transition-new(page-content) { animation-name: slide-in; }\n@keyframes slide-out { to { opacity: 0; transform: translateX(calc(-40px * var(--direction, 1))); } }\n@keyframes slide-in { from { opacity: 0; transform: translateX(calc(40px * var(--direction, 1))); } }',js:`let page = 0;
 const titles = ['Establish the context.', 'Connect the change.', 'Keep your bearings.'];
 document.querySelectorAll('[data-page-dir]').forEach(button => {
   button.addEventListener('click', () => {
@@ -238,19 +238,44 @@ function reduced(){return media.matches || $('#reduce-motion').checked;}
 function applyTiming(){root.style.setProperty('--duration',$('#duration').value+'ms');root.style.setProperty('--ease',$('#easing').value);$('#duration-output').value=$('#duration').value+' ms';updateCode();updatePageLink();}
 function updatePageLink(){const link=$('#open-pages');if(link){const query=new URLSearchParams({duration:$('#duration').value,easing:$('#easing').value,motion:reduced()||$('#fallback').checked?'reduce':'auto'});link.href='page-a.html?'+query;}}
 function updateMotion(){if(reduced()||$('#fallback').checked)activeTransition?.skipTransition();$('#motion-note').textContent=media.matches?'SYSTEM: REDUCED MOTION — transitions are skipped.':$('#reduce-motion').checked?'REDUCED MOTION — state changes without animation.':$('#fallback').checked?'FALLBACK — updates run without the View Transitions API.':'System motion preference is always respected.';updateCode();updatePageLink();}
+function containPreviewTransition(owner) {
+  const bounds = stage.getBoundingClientRect();
+  const left = bounds.left;
+  const top = bounds.top;
+  const right = bounds.right;
+  const bottom = bounds.bottom;
+  // Include the stage border: it is part of the demo-surface snapshot.
+  // Named snapshots live in the document overlay, outside #stage's overflow clip.
+  root.style.setProperty('--preview-clip', `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`);
+  root.dataset.previewTransition = String(owner);
+  const skip = () => activeTransition?.skipTransition();
+  addEventListener('scroll', skip, {capture:true, passive:true});
+  addEventListener('resize', skip);
+  return () => {
+    removeEventListener('scroll', skip, true);
+    removeEventListener('resize', skip);
+    // An older transition must not remove a newer transition's clip.
+    if (root.dataset.previewTransition === String(owner)) {
+      delete root.dataset.previewTransition;
+      root.style.removeProperty('--preview-clip');
+    }
+  };
+}
 async function perform(update,message){
   if(busy)return;
   const thisRun=++runId;busy=true;$('#run').setAttribute('aria-disabled','true');
+  let releaseClip = () => {};
   phase('capture');
   const doUpdate=()=>{if(thisRun!==runId)return;phase('update');update();$('#state-label').textContent=stateLabel();};
   try{
     if(!document.startViewTransition||reduced()||$('#fallback').checked){doUpdate();phase(null);status(message+' · Updated without animation.');return;}
+    releaseClip = containPreviewTransition(thisRun);
     const transition=document.startViewTransition(doUpdate);activeTransition=transition;
     transition.ready.then(()=>{if(thisRun===runId){phase('animate');status('Animating the new view…');}}).catch(()=>{});
     await transition.finished;
     if(thisRun===runId){phase(null);status(message+' · Transition complete.');}
   }catch(error){if(thisRun===runId)status('The animation was skipped. The state update still applies.');console.error(error);}
-  finally{if(thisRun===runId){activeTransition=null;busy=false;$('#run').removeAttribute('aria-disabled');}}
+  finally{releaseClip();if(thisRun===runId){activeTransition=null;busy=false;$('#run').removeAttribute('aria-disabled');}}
 }
 async function loadAsyncStudy() {
   if (busy || pendingRequest) return;
