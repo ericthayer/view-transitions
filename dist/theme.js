@@ -2,13 +2,12 @@
 (() => {
   const key = 'vt-lab-theme';
   const root = document.documentElement;
-  const system = matchMedia('(prefers-color-scheme: dark)');
   const valid = value => value === 'dark' || value === 'light';
   let saved;
   try { saved = localStorage.getItem(key); } catch { /* Storage can be unavailable. */ }
   let preference = valid(saved) ? saved : null;
-  const systemTheme = () => system.matches ? 'dark' : 'light';
-  root.dataset.theme = preference ?? systemTheme();
+  const defaultTheme = 'dark';
+  root.dataset.theme = preference ?? defaultTheme;
 
   function render(theme) {
     root.dataset.theme = theme;
@@ -30,13 +29,9 @@
     });
   });
 
-  system.addEventListener('change', () => {
-    if (preference === null) render(systemTheme());
-  });
-
   addEventListener('storage', event => {
     if (event.key !== key && event.key !== null) return;
     preference = valid(event.newValue) ? event.newValue : null;
-    render(preference ?? systemTheme());
+    render(preference ?? defaultTheme);
   });
 })();
