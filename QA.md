@@ -53,3 +53,11 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - Updated icons and wordmark checked in both themes and at desktop/mobile widths; the 390px layout has no horizontal overflow.
 - Shared-element demo still completes successfully; no console warnings or errors observed during the checked flow.
 - Header metadata precedes the theme toggle in DOM order on all three pages; at 1280px the theme control is the rightmost element and still changes the theme.
+
+## Preview animation containment
+
+- Confirmed the live stage already uses overflow:hidden; named View Transition snapshots require their own overlay clip.
+- During a 2000ms overshooting shared-element transition, the computed ::view-transition clip matches the preview’s inner bounds and the animation stays inside the panel.
+- All nine same-document demos animate with the preview clip active and complete without console warnings or errors.
+- Scrolling and resizing skip the current animation and release the clip while preserving the committed state.
+- The mobile clip matches the resized preview; reduced-motion updates do not leave clipping state behind.

@@ -20,6 +20,8 @@ The circular reveal uses a named snapshot and custom clip-path keyframes, with s
 
 System reduced motion takes priority over the lab controls. No-API simulation runs the same DOM update immediately. Keyboard-operable controls, roving tab focus, state attributes, and live status messages accompany the demos. Cross-document navigation uses ordinary links and CSS opt-in on both pages.
 
+The playground clips both the live preview DOM and the native View Transition overlay to the preview bounds. The overlay clip is temporary and is released when the transition finishes. Scrolling or resizing skips the animation so a snapshot cannot cover adjacent controls after its viewport coordinates change. The standalone exports and full-page navigation demo keep their normal document behavior.
+
 ## Source
 
 Content links to MDN, Chrome developer documentation, and relevant CSS-Tricks reading. Individual examples link to the relevant references. Browser support is detected for the same-document API, not inferred for cross-document navigation.

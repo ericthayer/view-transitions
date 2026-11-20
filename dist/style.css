@@ -72,3 +72,6 @@
 
 /* Shared SVG geometry keeps the progression arrows separated at every size. */
 .motion-mark svg{width:100%;height:100%}
+
+/* Clip the document-level snapshot overlay, not just the live demo DOM. */
+:root[data-preview-transition]::view-transition{clip-path:var(--preview-clip)}

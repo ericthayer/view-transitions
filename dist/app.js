@@ -238,19 +238,43 @@ function reduced(){return media.matches || $('#reduce-motion').checked;}
 function applyTiming(){root.style.setProperty('--duration',$('#duration').value+'ms');root.style.setProperty('--ease',$('#easing').value);$('#duration-output').value=$('#duration').value+' ms';updateCode();updatePageLink();}
 function updatePageLink(){const link=$('#open-pages');if(link){const query=new URLSearchParams({duration:$('#duration').value,easing:$('#easing').value,motion:reduced()||$('#fallback').checked?'reduce':'auto'});link.href='page-a.html?'+query;}}
 function updateMotion(){if(reduced()||$('#fallback').checked)activeTransition?.skipTransition();$('#motion-note').textContent=media.matches?'SYSTEM: REDUCED MOTION — transitions are skipped.':$('#reduce-motion').checked?'REDUCED MOTION — state changes without animation.':$('#fallback').checked?'FALLBACK — updates run without the View Transitions API.':'System motion preference is always respected.';updateCode();updatePageLink();}
+function containPreviewTransition(owner) {
+  const bounds = stage.getBoundingClientRect();
+  const left = bounds.left + stage.clientLeft;
+  const top = bounds.top + stage.clientTop;
+  const right = bounds.right - stage.clientLeft;
+  const bottom = bounds.bottom - stage.clientTop;
+  // Named snapshots live in the document overlay, outside #stage's overflow clip.
+  root.style.setProperty('--preview-clip', `polygon(${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px)`);
+  root.dataset.previewTransition = String(owner);
+  const skip = () => activeTransition?.skipTransition();
+  addEventListener('scroll', skip, {capture:true, passive:true});
+  addEventListener('resize', skip);
+  return () => {
+    removeEventListener('scroll', skip, true);
+    removeEventListener('resize', skip);
+    // An older transition must not remove a newer transition's clip.
+    if (root.dataset.previewTransition === String(owner)) {
+      delete root.dataset.previewTransition;
+      root.style.removeProperty('--preview-clip');
+    }
+  };
+}
 async function perform(update,message){
   if(busy)return;
   const thisRun=++runId;busy=true;$('#run').setAttribute('aria-disabled','true');
+  let releaseClip = () => {};
   phase('capture');
   const doUpdate=()=>{if(thisRun!==runId)return;phase('update');update();$('#state-label').textContent=stateLabel();};
   try{
     if(!document.startViewTransition||reduced()||$('#fallback').checked){doUpdate();phase(null);status(message+' · Updated without animation.');return;}
+    releaseClip = containPreviewTransition(thisRun);
     const transition=document.startViewTransition(doUpdate);activeTransition=transition;
     transition.ready.then(()=>{if(thisRun===runId){phase('animate');status('Animating the new view…');}}).catch(()=>{});
     await transition.finished;
     if(thisRun===runId){phase(null);status(message+' · Transition complete.');}
   }catch(error){if(thisRun===runId)status('The animation was skipped. The state update still applies.');console.error(error);}
-  finally{if(thisRun===runId){activeTransition=null;busy=false;$('#run').removeAttribute('aria-disabled');}}
+  finally{releaseClip();if(thisRun===runId){activeTransition=null;busy=false;$('#run').removeAttribute('aria-disabled');}}
 }
 async function loadAsyncStudy() {
   if (busy || pendingRequest) return;
