@@ -30,7 +30,13 @@ The initial theme follows the system color preference. Use the theme button in t
 
 Theme tokens live in `dist/style.css`; the dark palette is scoped to `:root[data-theme="dark"]`. Demo artwork uses those tokens, and copied standalone examples include the currently selected palette.
 
-The custom **Offset Viewports** mark uses two offset geometric frames to represent the before and after views. Its vector paths are used in the header and footer, both navigation-demo pages, and the favicon. `dist/logo-mark.svg` is the standalone vector asset.
+The VT/LAB identity is a text-only wordmark with no accompanying geometric mark.
+
+## Icon and wordmark refinement
+
+The app uses a text-only VT/LAB wordmark at weight 800 across the header, footer, and navigation-demo pages. The favicon uses a typographic VT abbreviation.
+
+`dist/assets/interface-icons.svg` defines the revised progression, capture, update, and continuity graphics. The hero uses three distinct arrowheads, and the mechanics section uses separate snapshot frames and a bracketed update arrow. Both use explicit SVG geometry rather than tightly spaced text glyphs.
 
 ## Publishing
 

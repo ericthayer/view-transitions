@@ -43,3 +43,12 @@ Scope: tested in the available in-app browser, not a full cross-browser or scree
 - All nine same-document experiments complete successfully in the browser with no console warnings or errors.
 - Standalone exports for all nine local examples parse and include complete theme tokens in both palettes.
 - Async data is a local fixture with an explicit 450 ms simulated delay; no network service is implied.
+
+## Arrow icons and text-only wordmark
+
+- Hero progression arrows use three separate SVG paths with independent arrowheads and clear spacing.
+- Capture, update, and continuity illustrations use a shared SVG icon set; the compressed brace/arrow text glyph is removed.
+- All shared icon references resolve, and the sprite and typographic favicon parse as valid SVG.
+- VT/LAB wordmarks use computed font weight 800; logo-mark SVGs and the registered trademark symbol are removed from all app headers and the footer.
+- Updated icons and wordmark checked in both themes and at desktop/mobile widths; the 390px layout has no horizontal overflow.
+- Shared-element demo still completes successfully; no console warnings or errors observed during the checked flow.
